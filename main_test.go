@@ -2,7 +2,11 @@
 package main_test
 
 import (
+	"fmt"
+	"github.com/naelchris/go-mux"
 	"log"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 )
@@ -15,6 +19,7 @@ func TestMain(m *testing.M) {
 		os.Getenv("APP_DB_PASSWORD"),
 		os.Getenv("APP_DB_NAME"))
 
+	fmt.Println(os.Getenv("APP_DB_NAME"))
 	ensureTableExists()
 	code := m.Run()
 	clearTable()
@@ -39,3 +44,31 @@ const tableCreationQuery = `CREATE TABLE IF NOT EXISTS products
     price NUMERIC(10,2) NOT NULL DEFAULT 0.00,
     CONSTRAINT products_pkey PRIMARY KEY (id)
 )`
+
+
+func TestEmptyTable(t *testing.T){
+	//delete all records ->  executeRequest -> checkResponseCode -> check the body of response, expected []
+	clearTable()
+
+	req,_ := http.NewRequest("GET","/product", nil)
+	response := executeRequest(req)
+
+	checkResponseCode(t, http.StatusOK, response.Code)
+
+	if body:=response.Body.String(); body != "[]"{
+		t.Errorf("Expected an empty array. Got %s", body)
+	}
+}
+
+func executeRequest(req *http.Request) *httptest.ResponseRecorder{
+	rr := httptest.NewRecorder()
+	a.Router.ServeHTTP(rr, req)
+	return rr
+}
+
+func checkResponseCode(t *testing.T, expected, actual int) {
+	if expected != actual{
+		t.Errorf("Expected code %d. got %d\n", expected, actual)
+	}
+}
+
